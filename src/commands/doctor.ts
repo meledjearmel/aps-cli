@@ -28,7 +28,7 @@ async function resolveApiKey(environment: Environment): Promise<KeyResolution> {
   }
 
   throw new CliError(
-    `Cle API introuvable (ni variable d'environnement ${envVar}, ni registra.conf.local.json). Executez "aps init".`,
+    `Cle API introuvable (ni variable d'environnement ${envVar}, ni appstation.conf.local.json). Executez "aps init".`,
     ExitCode.MissingConfig,
   );
 }
@@ -39,10 +39,10 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
   const config = await readProjectConfig();
 
   if (config === null) {
-    throw new CliError('registra.conf.json introuvable. Executez "aps init".', ExitCode.MissingConfig);
+    throw new CliError('appstation.conf.json introuvable. Executez "aps init".', ExitCode.MissingConfig);
   }
 
-  ok('registra.conf.json valide (schema v1).');
+  ok('appstation.conf.json valide (schema v1).');
 
   const environment = options.env ?? config.environment;
 
@@ -51,7 +51,7 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
   }
 
   const { apiKey, source } = await resolveApiKey(environment);
-  ok(`Cle API resolue (source: ${source === 'env' ? resolveApiKeyEnvVar(environment) : 'registra.conf.local.json'}).`);
+  ok(`Cle API resolue (source: ${source === 'env' ? resolveApiKeyEnvVar(environment) : 'appstation.conf.local.json'}).`);
 
   // config.api.baseUrl inclut deja le prefixe /api (voir
   // app-station/config/marketplace.php: "base_url — URL racine incluant le

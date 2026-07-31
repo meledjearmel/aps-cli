@@ -72,7 +72,7 @@ export async function initCommand(options: InitOptions): Promise<void> {
 
   if (existingConfig !== null && !options.yes) {
     const overwrite = await promptConfirm(
-      { message: 'registra.conf.json existe deja. Ecraser ?', default: false },
+      { message: 'appstation.conf.json existe deja. Ecraser ?', default: false },
       '--yes',
     );
 
@@ -104,8 +104,8 @@ export async function initCommand(options: InitOptions): Promise<void> {
   await writeLocalProjectConfig({ auth: { apiKey: initResponse.registra.apiKey } });
   const patched = await ensureGitignorePatched();
 
-  ok('registra.conf.json ecrit.');
-  ok('registra.conf.local.json ecrit (secret, non versionne).');
+  ok('appstation.conf.json ecrit.');
+  ok('appstation.conf.local.json ecrit (secret, non versionne).');
   if (patched) ok('.gitignore mis a jour.');
 
   printIntegrationInstructions(environment, initResponse.registra.baseUrl);
@@ -298,7 +298,7 @@ function buildSoftwareConfig(
   }
 
   return {
-    $schema: 'https://appstation.dev/schemas/registra.conf.v1.json',
+    $schema: 'https://appstation.dev/schemas/appstation.conf.v1.json',
     version: 1,
     type: 'software',
     environment: response.registra.environment,
@@ -318,7 +318,7 @@ function buildModuleConfig(
   packageId: number,
 ): ModuleProjectConfig {
   return {
-    $schema: 'https://appstation.dev/schemas/registra.conf.v1.json',
+    $schema: 'https://appstation.dev/schemas/appstation.conf.v1.json',
     version: 1,
     type: 'module',
     environment: response.registra.environment,
@@ -344,6 +344,6 @@ function printIntegrationInstructions(environment: Environment, registraBaseUrl:
     '',
     `Variables d'environnement pour votre projet :`,
     `  REGISTRA_BASE_URL=${registraBaseUrl}`,
-    `  ${envVar}=<voir registra.conf.local.json>`,
+    `  ${envVar}=<voir appstation.conf.local.json>`,
   ]);
 }

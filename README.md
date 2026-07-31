@@ -1,8 +1,8 @@
 # @app-station/cli
 
 CLI `aps` pour lier un logiciel ou un module a **AppStation** et recuperer la
-cle `X-Software-Api-Key` **Registra** correspondante. Ecrit `registra.conf.json`
-(versionnable) et `registra.conf.local.json` (secret, gitignore).
+cle `X-Software-Api-Key` **Registra** correspondante. Ecrit `appstation.conf.json`
+(versionnable) et `appstation.conf.local.json` (secret, gitignore).
 
 Doc de reference complete : `app-station/docs/cli/appstation-cli.md`.
 

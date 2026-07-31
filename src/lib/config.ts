@@ -2,8 +2,8 @@ import { chmod, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { LocalProjectConfig, ProjectConfig } from '../types.js';
 
-const CONFIG_FILE = 'registra.conf.json';
-const LOCAL_CONFIG_FILE = 'registra.conf.local.json';
+const CONFIG_FILE = 'appstation.conf.json';
+const LOCAL_CONFIG_FILE = 'appstation.conf.local.json';
 
 export function configPath(cwd: string = process.cwd()): string {
   return path.join(cwd, CONFIG_FILE);
@@ -55,7 +55,7 @@ export async function writeLocalProjectConfig(
 }
 
 const GITIGNORE_HEADER = '# App Station / Registra (genere par aps init)';
-const GITIGNORE_PATTERNS = ['registra.conf.local.json', '.env.registra', 'registra.manifest.signed.json'];
+const GITIGNORE_PATTERNS = ['appstation.conf.local.json', '.env.registra', 'appstation.manifest.signed.json'];
 
 export async function ensureGitignorePatched(cwd: string = process.cwd()): Promise<boolean> {
   const gitignorePath = path.join(cwd, '.gitignore');
