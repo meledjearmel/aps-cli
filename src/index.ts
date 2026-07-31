@@ -33,8 +33,8 @@ program
 
 program
   .command('login')
-  .description('Authentifie la CLI aupres d\'AppStation.')
-  .option('--token <token>', 'Token CLI genere dans AppStation -> Parametres -> CLI (ou APS_TOKEN)')
+  .description("Authentifie la CLI aupres d'AppStation (ouvre le navigateur par defaut).")
+  .option('--token <token>', 'Saute le navigateur : token colle directement (ou APS_TOKEN)')
   .option('--base-url <url>', 'URL de base AppStation (ou APPSTATION_BASE_URL)')
   .option(...NON_INTERACTIVE_OPTION)
   .action(withErrorHandling(loginCommand));

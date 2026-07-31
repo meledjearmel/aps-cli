@@ -27,9 +27,10 @@ aps doctor [--env development|production]
 aps whoami
 ```
 
-Le token CLI se genere dans AppStation -> Parametres -> CLI (aucun endpoint de
-login programmatique n'existe encore cote serveur : v1 = coller un token
-personnel).
+`aps login` ouvre le navigateur par defaut (device code, comme `gh auth login`) :
+la CLI affiche un code, l'utilisateur l'approuve sur AppStation, la CLI recupere
+le token automatiquement. `--token <token>` (ou `APS_TOKEN`) saute le navigateur
+pour un usage CI/script (token genere dans AppStation -> Parametres -> CLI).
 
 `sign` / `verify` / `promote` / `rotate-key` ne sont pas encore implementes
 dans cette v1 (voir doc de reference, §15 Roadmap).
