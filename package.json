@@ -1,0 +1,41 @@
+{
+  "name": "@app-station/cli",
+  "version": "0.1.0",
+  "description": "CLI App Station pour lier un logiciel ou un module a AppStation/Registra (\"aps init\", \"aps doctor\", ...).",
+  "type": "module",
+  "bin": {
+    "aps": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "appstation",
+    "registra",
+    "cli",
+    "licensing"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@inquirer/prompts": "^7.2.1",
+    "boxen": "^8.0.1",
+    "commander": "^13.0.0",
+    "dotenv": "^16.4.7",
+    "ora": "^8.1.1",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  }
+}
