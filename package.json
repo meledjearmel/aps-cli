@@ -15,7 +15,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "keywords": [
     "appstation",
@@ -23,7 +24,7 @@
     "cli",
     "licensing"
   ],
-  "author": "",
+  "author": "Armel Meledje",
   "license": "ISC",
   "dependencies": {
     "@inquirer/prompts": "^7.2.1",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@types/node": "^22.10.5",
     "tsup": "^8.3.5",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10"
   }
 }
