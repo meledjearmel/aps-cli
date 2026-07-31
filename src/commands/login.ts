@@ -1,6 +1,7 @@
 import { AppStationClient } from '../lib/appstationApi.js';
 import { readCredentials, writeCredentials } from '../lib/credentials.js';
-import { pollUntilResolved, requestDeviceCode } from '../lib/deviceAuth.js';
+import { describeFetchError } from '../lib/errors.js';
+import { beginLocalCallbackLogin } from '../lib/localCallback.js';
 import { openBrowser } from '../lib/openBrowser.js';
 import { isNonInteractive, promptInput } from '../lib/prompts.js';
 import { withSpinner } from '../lib/spinner.js';
@@ -23,7 +24,7 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
     await withSpinner('Verification du token aupres d\'AppStation...', () => client.listSoftwares());
   } catch (error) {
     throw new CliError(
-      `Impossible de valider le token aupres d'AppStation : ${(error as Error).message}`,
+      `Impossible de valider le token aupres d'AppStation : ${describeFetchError(error)}`,
       ExitCode.Unauthenticated,
     );
   }
@@ -65,9 +66,13 @@ function resolveExplicitToken(token: string): string {
 }
 
 /**
- * Connexion navigateur (device code) : la CLI recupere un code, ouvre le
- * navigateur sur AppStation, et poll jusqu'a approbation. Equivalent de
- * `gh auth login` / `docker login` avec browser flow.
+ * Connexion navigateur via callback local : la CLI demarre un serveur
+ * ephemere sur 127.0.0.1, ouvre le navigateur sur AppStation avec l'URL de ce
+ * serveur en parametre, et attend la redirection retour. Plus resistant au
+ * phishing qu'un flow "device code" classique — voir
+ * app/Support/Cli/CallbackUrlValidator.php cote serveur : le token n'est
+ * jamais redirige ailleurs que vers un callback loopback, donc impossible a
+ * relayer vers la machine d'un attaquant.
  */
 async function browserLogin(baseUrl: string): Promise<string> {
   if (isNonInteractive()) {
@@ -77,15 +82,12 @@ async function browserLogin(baseUrl: string): Promise<string> {
     );
   }
 
-  const device = await withSpinner('Demarrage de la connexion navigateur...', () => requestDeviceCode(baseUrl));
+  const flow = await withSpinner('Demarrage du serveur local...', () => beginLocalCallbackLogin(baseUrl));
 
   heading('Connexion navigateur');
-  info(`Code : ${device.user_code}`);
-  info(`Si le navigateur ne s'ouvre pas automatiquement, ouvrez : ${device.verification_uri_complete}`);
+  info(`Si le navigateur ne s'ouvre pas automatiquement, ouvrez : ${flow.authorizeUrl}`);
 
-  await openBrowser(device.verification_uri_complete);
+  await openBrowser(flow.authorizeUrl);
 
-  return withSpinner("En attente d'approbation dans le navigateur...", () =>
-    pollUntilResolved(baseUrl, device.device_code, device.interval, device.expires_in),
-  );
+  return withSpinner("En attente d'approbation dans le navigateur...", () => flow.waitForToken());
 }

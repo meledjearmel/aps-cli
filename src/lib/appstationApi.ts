@@ -1,3 +1,4 @@
+import { describeFetchError } from './errors.js';
 import type {
   AppStationPackage,
   AppStationSoftware,
@@ -41,7 +42,7 @@ export class AppStationClient {
         },
       });
     } catch (error) {
-      throw new ApiError(`Impossible de contacter AppStation (${url}) : ${(error as Error).message}`, 0);
+      throw new ApiError(`Impossible de contacter AppStation (${url}) : ${describeFetchError(error)}`, 0);
     }
 
     const contentType = response.headers.get('content-type') ?? '';

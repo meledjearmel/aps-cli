@@ -27,13 +27,41 @@ aps doctor [--env development|production]
 aps whoami
 ```
 
-`aps login` ouvre le navigateur par defaut (device code, comme `gh auth login`) :
-la CLI affiche un code, l'utilisateur l'approuve sur AppStation, la CLI recupere
-le token automatiquement. `--token <token>` (ou `APS_TOKEN`) saute le navigateur
-pour un usage CI/script (token genere dans AppStation -> Parametres -> CLI).
+`aps login` ouvre le navigateur par defaut via un **callback local** : la CLI
+demarre un serveur ephemere sur `127.0.0.1`, ouvre AppStation dans le navigateur,
+et recupere le token via la redirection retour une fois l'utilisateur authentifie
+et l'approbation donnee — sans code a copier/coller. `--token <token>` (ou
+`APS_TOKEN`) saute le navigateur pour un usage CI/script (token genere dans
+AppStation -> Parametres -> CLI).
+
+Ce mecanisme est volontairement different d'un flow "device code" classique
+(GitHub/Google/Docker) : AppStation ne redirige jamais le token que vers un
+callback strictement `127.0.0.1`/`localhost` (voir
+`App\Support\Cli\CallbackUrlValidator` cote serveur), ce qui le rend resistant
+au phishing a distance — un attaquant ne peut pas relayer la redirection finale
+vers sa propre machine, quel que soit le lien qu'il parvient a faire cliquer a
+une victime. Contrepartie : ca ne marche pas depuis une session SSH sans
+redirection de port (utilisez `--token`/`APS_TOKEN` dans ce cas).
 
 `sign` / `verify` / `promote` / `rotate-key` ne sont pas encore implementes
 dans cette v1 (voir doc de reference, §15 Roadmap).
+
+## Depannage
+
+**`fetch failed` contre une instance locale (Laravel Herd, Valet, etc.)** —
+Node ne fait pas confiance au certificat auto-signe/CA locale de votre outil
+de dev, meme si votre navigateur oui. Le message d'erreur inclut maintenant
+la cause exacte (`error.cause`) ; si elle mentionne `UNABLE_TO_VERIFY_LEAF_SIGNATURE`,
+relancez avec le CA systeme :
+
+```bash
+node --use-system-ca dist/index.js login --base-url https://mon-site.test
+# ou, en global :
+NODE_OPTIONS=--use-system-ca aps login --base-url https://mon-site.test
+```
+
+(`--use-system-ca` necessite Node 22+. Sur une version plus ancienne,
+utilisez `NODE_EXTRA_CA_CERTS=/chemin/vers/le/ca-local.pem` a la place.)
 
 ## Developpement
 

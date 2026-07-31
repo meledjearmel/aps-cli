@@ -1,4 +1,5 @@
 import { readLocalProjectConfig, readProjectConfig, resolveApiKeyEnvVar } from '../lib/config.js';
+import { describeFetchError } from '../lib/errors.js';
 import { withSpinner } from '../lib/spinner.js';
 import type { Environment } from '../types.js';
 import { assertOneOf } from '../lib/validate.js';
@@ -68,7 +69,7 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
   try {
     meResponse = await withSpinner('Registra GET /software/me...', () => fetch(`${baseUrl}/software/me`, { headers }));
   } catch (error) {
-    throw new CliError(`Impossible de contacter Registra (${baseUrl}) : ${(error as Error).message}`, ExitCode.Network);
+    throw new CliError(`Impossible de contacter Registra (${baseUrl}) : ${describeFetchError(error)}`, ExitCode.Network);
   }
 
   if (meResponse.status === 401 || meResponse.status === 403) {
@@ -95,7 +96,7 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
       }),
     );
   } catch (error) {
-    throw new CliError(`Impossible de contacter Registra (${baseUrl}) : ${(error as Error).message}`, ExitCode.Network);
+    throw new CliError(`Impossible de contacter Registra (${baseUrl}) : ${describeFetchError(error)}`, ExitCode.Network);
   }
 
   if (verifyResponse.status === 404) {
