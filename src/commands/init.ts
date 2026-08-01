@@ -215,9 +215,10 @@ type LinkResult<T> = { data: T; registra_dev_sync_error: string | null };
 
 /**
  * Flow de liaison partage entre software et module : lie, previent d'un
- * conflit de fingerprint (409) et propose de forcer la liaison.
+ * conflit de fingerprint (409) et propose de forcer la liaison. Exporte pour
+ * reutilisation par `aps rotate-key`.
  */
-async function linkWithRetry<T>(
+export async function linkWithRetry<T>(
   resourceLabel: 'software' | 'module',
   link: (force: boolean) => Promise<LinkResult<T>>,
   force: boolean,

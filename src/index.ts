@@ -8,6 +8,7 @@ import { doctorCommand } from './commands/doctor.js';
 import { initCommand } from './commands/init.js';
 import { loginCommand } from './commands/login.js';
 import { logoutCommand } from './commands/logout.js';
+import { rotateKeyCommand } from './commands/rotate-key.js';
 import { signCommand } from './commands/sign.js';
 import { verifyCommand } from './commands/verify.js';
 import { whoamiCommand } from './commands/whoami.js';
@@ -105,6 +106,13 @@ program
   .command('verify <file>')
   .description('Verifie un manifest signe (schema, signature HMAC-SHA256, fraicheur).')
   .action(withErrorHandling((file: string) => verifyCommand({ file })));
+
+program
+  .command('rotate-key')
+  .description('Rafraichit la cle Registra locale apres une rotation faite cote Registra (admin).')
+  .option('--env <env>', 'development ou production — doit correspondre a l\'environnement du projet')
+  .option(...NON_INTERACTIVE_OPTION)
+  .action(withErrorHandling(rotateKeyCommand));
 
 function withErrorHandling<Args extends unknown[]>(
   handler: (...args: Args) => Promise<void>,

@@ -159,6 +159,22 @@ Necessite le meme `signingSecret` que celui utilise pour signer :
 `APS_SIGNING_SECRET` (utile en CI ou pour une verification hors du depot
 d'origine, par ex. cote App Station).
 
+### `aps rotate-key`
+
+Rafraichit `appstation.conf.local.json` (cle API + signingSecret) apres une
+rotation de la cle faite cote Registra. Ne declenche pas la rotation
+elle-meme (aujourd'hui manuelle, cote admin Registra) : recupere juste la
+cle courante.
+
+```bash
+aps rotate-key [--env development|production]
+aps doctor
+```
+
+`--env`, s'il est fourni, doit correspondre a l'environnement deja inscrit
+dans `appstation.conf.json` — pour changer d'environnement, utilisez
+`aps init --env <env>`.
+
 ## Ou sont stockees les donnees
 
 | Donnee | Emplacement | Versionne ? |
