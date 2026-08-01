@@ -1,6 +1,6 @@
 {
   "name": "@app-station/cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI App Station pour lier un logiciel ou un module a AppStation/Registra (\"aps init\", \"aps doctor\", ...).",
   "type": "module",
   "bin": {
