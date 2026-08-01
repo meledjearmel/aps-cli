@@ -175,6 +175,20 @@ aps doctor
 dans `appstation.conf.json` — pour changer d'environnement, utilisez
 `aps init --env <env>`.
 
+### `aps promote`
+
+Bascule `appstation.conf.json`/`appstation.conf.local.json` de
+`development` vers `production`, une fois le logiciel/module **publie**
+sur App Station (approbation admin). Ecrase la configuration locale avec
+les identifiants et la cle Registra de production.
+
+```bash
+aps promote [-y|--yes] [--non-interactive]
+```
+
+En CI/CD, remplacez `REGISTRA_DEV_API_KEY` par `REGISTRA_API_KEY` apres la
+promotion.
+
 ## Ou sont stockees les donnees
 
 | Donnee | Emplacement | Versionne ? |

@@ -38,7 +38,7 @@ export interface InitOptions {
   yes?: boolean;
 }
 
-function isModuleResponse(response: RegistraInitResponse): response is RegistraInitModuleResponse {
+export function isModuleResponse(response: RegistraInitResponse): response is RegistraInitModuleResponse {
   return 'module' in response;
 }
 
@@ -290,7 +290,7 @@ async function promptName(): Promise<string> {
   );
 }
 
-function buildSoftwareConfig(
+export function buildSoftwareConfig(
   response: RegistraInitResponse,
   appstationBaseUrl: string,
   fingerprint: string,
@@ -314,7 +314,7 @@ function buildSoftwareConfig(
   };
 }
 
-function buildModuleConfig(
+export function buildModuleConfig(
   response: RegistraInitModuleResponse,
   appstationBaseUrl: string,
   fingerprint: string,

@@ -8,6 +8,7 @@ import { doctorCommand } from './commands/doctor.js';
 import { initCommand } from './commands/init.js';
 import { loginCommand } from './commands/login.js';
 import { logoutCommand } from './commands/logout.js';
+import { promoteCommand } from './commands/promote.js';
 import { rotateKeyCommand } from './commands/rotate-key.js';
 import { signCommand } from './commands/sign.js';
 import { verifyCommand } from './commands/verify.js';
@@ -113,6 +114,13 @@ program
   .option('--env <env>', 'development ou production — doit correspondre a l\'environnement du projet')
   .option(...NON_INTERACTIVE_OPTION)
   .action(withErrorHandling(rotateKeyCommand));
+
+program
+  .command('promote')
+  .description('Bascule la config locale de development vers production (software/module publie).')
+  .option('-y, --yes', 'Ne pas demander de confirmation')
+  .option(...NON_INTERACTIVE_OPTION)
+  .action(withErrorHandling(promoteCommand));
 
 function withErrorHandling<Args extends unknown[]>(
   handler: (...args: Args) => Promise<void>,
