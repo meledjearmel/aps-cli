@@ -1,95 +1,148 @@
 # @app-station/cli
 
-CLI `aps` pour lier un logiciel ou un module a **AppStation** et recuperer la
-cle `X-Software-Api-Key` **Registra** correspondante. Ecrit `appstation.conf.json`
-(versionnable) et `appstation.conf.local.json` (secret, gitignore).
+CLI officielle **App Station** : elle relie un depot de logiciel (ou un module
+d'un logiciel existant) a votre compte **App Station**, puis recupere et
+stocke localement la cle API **Registra** (`X-Software-Api-Key`) necessaire
+pour verifier des licences depuis votre code.
 
-Doc de reference complete : `app-station/docs/cli/appstation-cli.md`.
+En resume : `aps login` vous authentifie, `aps init` lie le depot courant a
+un logiciel/module App Station et ecrit la configuration, `aps doctor`
+verifie que tout fonctionne.
 
 ## Installation
 
+Node.js 18 ou superieur est requis.
+
 ```bash
+# ponctuel, sans installation globale
 npx @app-station/cli init
-# ou en global
+
+# ou installe globalement
 npm install -g @app-station/cli
 aps --version
 ```
 
-## Commandes (v1)
+## Demarrage rapide
+
+Dans le depot du logiciel (ou module) a lier :
 
 ```bash
-aps login [--token <token>] [--base-url <url>]
+aps login              # ouvre le navigateur pour vous authentifier
+aps init                # lie le depot a un logiciel/module App Station existant, ou en cree un
+aps doctor              # verifie que la cle API fonctionne contre Registra
+```
+
+`aps init` est interactif par defaut (il vous demande ce que vous voulez
+faire, quel logiciel lier, etc.). Pour un usage script/CI, tous les choix
+sont aussi disponibles en flags — voir la reference des commandes ci-dessous.
+
+## Reference des commandes
+
+### `aps login`
+
+Authentifie la CLI aupres d'App Station et enregistre les identifiants
+localement (voir [Ou sont stockees les donnees](#ou-sont-stockees-les-donnees)).
+
+```bash
+aps login [--token <token>] [--base-url <url>] [--dev] [--use-system-ca] [--non-interactive]
+```
+
+| Flag | Description |
+| --- | --- |
+| `--token <token>` | Saute l'ouverture du navigateur : colle directement un token (genere dans App Station -> Parametres -> CLI). Equivalent a la variable `APS_TOKEN`. |
+| `--base-url <url>` | URL de l'instance App Station a utiliser. Par defaut : `https://app-station.neocode.ci`. Equivalent a la variable `APPSTATION_BASE_URL`. |
+| `--dev` | Raccourci pour pointer vers un environnement de test : utilise `https://app-station.test` par defaut et active automatiquement `--use-system-ca`. |
+| `--use-system-ca` | Fait aussi confiance au magasin de certificats du systeme, en plus des CA racines integrees a Node — necessaire face a un certificat local auto-signe (Herd, Valet, mkcert...). Necessite Node 22+. |
+| `--non-interactive` | N'affiche jamais de prompt ; echoue avec un message clair si une information manque (utile en CI). |
+
+Sans `--token`, `aps login` ouvre votre navigateur par defaut : la CLI
+demarre un petit serveur local, vous authentifie sur App Station, et recupere
+le token via une redirection retour vers ce serveur — sans code a copier/coller.
+
+Ce mecanisme est volontairement different d'un flow "device code" classique
+(GitHub/Google/Docker) : App Station ne redirige jamais le token que vers un
+callback strictement `127.0.0.1`/`localhost`, ce qui le rend resistant au
+phishing a distance — un attaquant ne peut pas relayer la redirection finale
+vers sa propre machine, quel que soit le lien qu'il parvient a faire cliquer a
+une victime. Contrepartie : ca ne fonctionne pas depuis une session SSH sans
+redirection de port ; utilisez `--token`/`APS_TOKEN` dans ce cas.
+
+### `aps logout`
+
+Supprime les identifiants stockes localement.
+
+```bash
 aps logout
+```
+
+### `aps init`
+
+Lie le depot courant a un logiciel ou un module App Station, puis ecrit la
+configuration Registra locale (cle API, URL de l'API, etc.).
+
+```bash
 aps init [--link | --create] [--type software|module] [--env development|production] \
          [--software-id <id>] [--package-id <id>] [--parent-software-id <id>] \
-         [--name <name>] [--tagline <tagline>] [--force-link] [-y|--yes]
-aps doctor [--env development|production]
+         [--name <name>] [--tagline <tagline>] [--force-link] [-y|--yes] [--non-interactive]
+```
+
+| Flag | Description |
+| --- | --- |
+| `--link` | Lie le depot a un logiciel/module App Station existant (choix interactif ou via `--software-id`/`--package-id`). |
+| `--create` | Cree un nouveau logiciel/module sur App Station puis lie le depot a celui-ci. |
+| `--type <type>` | `software` (defaut) ou `module`. |
+| `--env <env>` | `development` (defaut) ou `production` — determine quelle cle Registra est emise. |
+| `--software-id <id>` | ID App Station du logiciel a lier (mode `--link --type software`). |
+| `--package-id <id>` | ID App Station du module a lier (mode `--link --type module`). |
+| `--parent-software-id <id>` | ID App Station du logiciel parent (mode `--create --type module`). |
+| `--name <name>` | Nom du logiciel/module (mode `--create`). Detecte depuis `package.json`/`composer.json` si omis. |
+| `--tagline <tagline>` | Description courte du logiciel (optionnel, mode `--create`). |
+| `--force-link` | Force la liaison meme si ce logiciel/module est deja lie a un autre depot local. |
+| `-y, --yes` | Ecrase `appstation.conf.json` existant sans confirmation. |
+| `--non-interactive` | N'affiche jamais de prompt. |
+
+Ecrit deux fichiers a la racine du depot :
+
+- `appstation.conf.json` — configuration non sensible (a versionner).
+- `appstation.conf.local.json` — contient la cle API Registra (secret, ajoute
+  automatiquement au `.gitignore`).
+
+### `aps doctor`
+
+Diagnostique la liaison App Station/Registra du depot courant : valide
+`appstation.conf.json`, resout la cle API, puis effectue deux appels reels
+contre l'API Registra pour confirmer qu'elle est acceptee.
+
+```bash
+aps doctor [--env development|production] [--non-interactive]
+```
+
+`--env` force le diagnostic sur un environnement different de celui inscrit
+dans `appstation.conf.json` (utile pour verifier une cle de production tout
+en developpant en local).
+
+### `aps whoami`
+
+Affiche l'instance App Station connectee et le logiciel/module lie au depot
+courant.
+
+```bash
 aps whoami
 ```
 
-`aps login` ouvre le navigateur par defaut via un **callback local** : la CLI
-demarre un serveur ephemere sur `127.0.0.1`, ouvre AppStation dans le navigateur,
-et recupere le token via la redirection retour une fois l'utilisateur authentifie
-et l'approbation donnee — sans code a copier/coller. `--token <token>` (ou
-`APS_TOKEN`) saute le navigateur pour un usage CI/script (token genere dans
-AppStation -> Parametres -> CLI).
+## Ou sont stockees les donnees
 
-Ce mecanisme est volontairement different d'un flow "device code" classique
-(GitHub/Google/Docker) : AppStation ne redirige jamais le token que vers un
-callback strictement `127.0.0.1`/`localhost` (voir
-`App\Support\Cli\CallbackUrlValidator` cote serveur), ce qui le rend resistant
-au phishing a distance — un attaquant ne peut pas relayer la redirection finale
-vers sa propre machine, quel que soit le lien qu'il parvient a faire cliquer a
-une victime. Contrepartie : ca ne marche pas depuis une session SSH sans
-redirection de port (utilisez `--token`/`APS_TOKEN` dans ce cas).
+| Donnee | Emplacement | Versionne ? |
+| --- | --- | --- |
+| Session (token App Station) | `~/.config/app-station/credentials.json` (Linux/macOS) ou `%APPDATA%\app-station\credentials.json` (Windows), permissions `0600` | Non — local a la machine |
+| Config du projet | `appstation.conf.json` a la racine du depot | Oui |
+| Cle API Registra | `appstation.conf.local.json` a la racine du depot | Non — ajoute au `.gitignore` par `aps init` |
 
-`sign` / `verify` / `promote` / `rotate-key` ne sont pas encore implementes
-dans cette v1 (voir doc de reference, §15 Roadmap).
+## Contribuer
 
-## Depannage
+Voir [CONTRIBUTING.md](./CONTRIBUTING.md) pour le developpement local et le
+processus de publication.
 
-**`fetch failed` contre une instance locale (Laravel Herd, Valet, etc.)** —
-Node ne fait pas confiance au certificat auto-signe/CA locale de votre outil
-de dev, meme si votre navigateur oui. Le message d'erreur inclut maintenant
-la cause exacte (`error.cause`) ; si elle mentionne `UNABLE_TO_VERIFY_LEAF_SIGNATURE`,
-relancez avec le CA systeme :
+## Licence
 
-```bash
-node --use-system-ca dist/index.js login --base-url https://mon-site.test
-# ou, en global :
-NODE_OPTIONS=--use-system-ca aps login --base-url https://mon-site.test
-```
-
-(`--use-system-ca` necessite Node 22+. Sur une version plus ancienne,
-utilisez `NODE_EXTRA_CA_CERTS=/chemin/vers/le/ca-local.pem` a la place.)
-
-## Developpement
-
-```bash
-npm install
-npm run typecheck
-npm run build
-node dist/index.js --help
-```
-
-## Publication
-
-La publication sur npm est automatisee via `.github/workflows/publish.yml` :
-tout tag `vX.Y.Z` pousse sur `main` declenche le build + les tests, puis
-`npm publish --access public --provenance`.
-
-Mise en place (une seule fois) :
-
-1. Sur npmjs.com : Access Tokens -> Generate New Token -> **Granular Access
-   Token**, type "Automation", scope limite a `@app-station/cli` (publish).
-2. Dans les secrets GitHub Actions du depot : ajouter `NPM_TOKEN` avec ce
-   token.
-
-Pour chaque nouvelle version :
-
-```bash
-npm version patch   # ou minor / major
-git push --follow-tags
-```
-
-Le tag pousse declenche le workflow, qui publie automatiquement.
+[ISC](./LICENSE)

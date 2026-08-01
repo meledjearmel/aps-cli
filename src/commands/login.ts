@@ -1,21 +1,23 @@
 import { AppStationClient } from '../lib/appstationApi.js';
-import { readCredentials, writeCredentials } from '../lib/credentials.js';
+import { writeCredentials } from '../lib/credentials.js';
 import { describeFetchError } from '../lib/errors.js';
 import { beginLocalCallbackLogin } from '../lib/localCallback.js';
 import { openBrowser } from '../lib/openBrowser.js';
-import { isNonInteractive, promptInput } from '../lib/prompts.js';
+import { isNonInteractive } from '../lib/prompts.js';
 import { withSpinner } from '../lib/spinner.js';
 import { CliError, ExitCode, heading, info, nextSteps, ok } from '../lib/ui.js';
+
+const PRODUCTION_BASE_URL = 'https://app-station.neocode.ci';
+const DEV_BASE_URL = 'https://app-station.test';
 
 export interface LoginOptions {
   token?: string;
   baseUrl?: string;
+  dev?: boolean;
 }
 
 export async function loginCommand(options: LoginOptions): Promise<void> {
-  const existing = await readCredentials();
-
-  const baseUrl = await resolveBaseUrl(options, existing?.appstation.baseUrl);
+  const baseUrl = resolveBaseUrl(options);
   const accessToken = options.token !== undefined ? resolveExplicitToken(options.token) : await browserLogin(baseUrl);
 
   const client = new AppStationClient(baseUrl, accessToken);
@@ -34,25 +36,14 @@ export async function loginCommand(options: LoginOptions): Promise<void> {
   nextSteps('Prochaine etape', ['aps init   — lier ou creer un software/module AppStation']);
 }
 
-async function resolveBaseUrl(options: LoginOptions, existingBaseUrl?: string): Promise<string> {
-  if (options.baseUrl) {
-    return options.baseUrl.trim().replace(/\/+$/, '');
+function resolveBaseUrl(options: LoginOptions): string {
+  const explicit = options.baseUrl ?? process.env.APPSTATION_BASE_URL;
+
+  if (explicit) {
+    return explicit.trim().replace(/\/+$/, '');
   }
 
-  if (process.env.APPSTATION_BASE_URL) {
-    return process.env.APPSTATION_BASE_URL.trim().replace(/\/+$/, '');
-  }
-
-  const value = await promptInput(
-    {
-      message: 'URL de base AppStation (ex: https://appstation.example.com)',
-      default: existingBaseUrl,
-      validate: (v) => (v.trim().length > 0 ? true : 'Requis'),
-    },
-    '--base-url <url> (ou APPSTATION_BASE_URL)',
-  );
-
-  return value.trim().replace(/\/+$/, '');
+  return options.dev ? DEV_BASE_URL : PRODUCTION_BASE_URL;
 }
 
 function resolveExplicitToken(token: string): string {

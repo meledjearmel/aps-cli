@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { Command } from 'commander';
+import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -13,6 +14,22 @@ import { CliError, ExitCode, fail } from './lib/ui.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(await readFile(path.join(__dirname, '..', 'package.json'), 'utf8')) as { version: string };
+
+// --use-system-ca (implique par --dev) est un flag de demarrage Node, pas
+// togglable une fois le process lance : si demande, on se re-execute une
+// fois avec le flag pose via NODE_OPTIONS puis on sort avec le meme code.
+const rawArgs = process.argv.slice(2);
+const wantsSystemCa = rawArgs.includes('login') && (rawArgs.includes('--dev') || rawArgs.includes('--use-system-ca'));
+const alreadyHasSystemCa = (process.env.NODE_OPTIONS ?? '').includes('--use-system-ca');
+
+if (wantsSystemCa && !alreadyHasSystemCa) {
+  const nodeOptions = [process.env.NODE_OPTIONS, '--use-system-ca'].filter(Boolean).join(' ');
+  const result = spawnSync(process.execPath, process.argv.slice(1), {
+    stdio: 'inherit',
+    env: { ...process.env, NODE_OPTIONS: nodeOptions },
+  });
+  process.exit(result.status ?? 1);
+}
 
 // Non-interactif si demande explicitement, si on tourne en CI, ou si aucun
 // TTY n'est attache (pipe, script, cron) — meme logique que la plupart des
@@ -35,7 +52,9 @@ program
   .command('login')
   .description("Authentifie la CLI aupres d'AppStation (ouvre le navigateur par defaut).")
   .option('--token <token>', 'Saute le navigateur : token colle directement (ou APS_TOKEN)')
-  .option('--base-url <url>', 'URL de base AppStation (ou APPSTATION_BASE_URL)')
+  .option('--base-url <url>', 'URL de base AppStation (ou APPSTATION_BASE_URL). Par defaut : https://app-station.neocode.ci')
+  .option('--dev', 'Environnement de test : https://app-station.test par defaut, et confiance CA systeme (equivaut a --use-system-ca)')
+  .option('--use-system-ca', 'Fait aussi confiance au magasin de certificats du systeme (certificat local auto-signe ; Node 22+)')
   .option(...NON_INTERACTIVE_OPTION)
   .action(withErrorHandling(loginCommand));
 
