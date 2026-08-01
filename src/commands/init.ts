@@ -101,7 +101,10 @@ export async function initCommand(options: InitOptions): Promise<void> {
     : buildSoftwareConfig(initResponse, session.appstation.baseUrl, fingerprint, detectedStack, targetId);
 
   await writeProjectConfig(config);
-  await writeLocalProjectConfig({ auth: { apiKey: initResponse.registra.apiKey } });
+  await writeLocalProjectConfig({
+    auth: { apiKey: initResponse.registra.apiKey },
+    signingSecret: initResponse.signingSecret,
+  });
   const patched = await ensureGitignorePatched();
 
   ok('appstation.conf.json ecrit.');

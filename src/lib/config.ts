@@ -1,6 +1,7 @@
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { LocalProjectConfig, ProjectConfig } from '../types.js';
+import { CliError, ExitCode } from './ui.js';
 
 const CONFIG_FILE = 'appstation.conf.json';
 const LOCAL_CONFIG_FILE = 'appstation.conf.local.json';
@@ -84,4 +85,33 @@ export async function ensureGitignorePatched(cwd: string = process.cwd()): Promi
 
 export function resolveApiKeyEnvVar(environment: 'development' | 'production'): string {
   return environment === 'development' ? 'REGISTRA_DEV_API_KEY' : 'REGISTRA_API_KEY';
+}
+
+/**
+ * Resout le signingSecret pour `aps sign`/`aps verify` : variable
+ * d'environnement `APS_SIGNING_SECRET` d'abord (usage CI/admin, sans repo
+ * local — voir docs/appstation-cli.md §7 `aps verify`), sinon
+ * appstation.conf.local.json (usage editeur habituel). `preloadedLocal`
+ * evite une relecture du fichier quand l'appelant l'a deja charge.
+ */
+export async function resolveSigningSecret(
+  cwd: string = process.cwd(),
+  preloadedLocal?: LocalProjectConfig | null,
+): Promise<string> {
+  const fromEnv = process.env.APS_SIGNING_SECRET;
+
+  if (fromEnv && fromEnv.trim().length > 0) {
+    return fromEnv;
+  }
+
+  const local = preloadedLocal !== undefined ? preloadedLocal : await readLocalProjectConfig(cwd);
+
+  if (local?.signingSecret) {
+    return local.signingSecret;
+  }
+
+  throw new CliError(
+    'signingSecret introuvable (ni APS_SIGNING_SECRET, ni appstation.conf.local.json). Executez "aps init".',
+    ExitCode.MissingConfig,
+  );
 }

@@ -95,4 +95,5 @@ export type ProjectConfig = SoftwareProjectConfig | ModuleProjectConfig;
 
 export interface LocalProjectConfig {
   auth: { apiKey: string };
+  signingSecret: string;
 }

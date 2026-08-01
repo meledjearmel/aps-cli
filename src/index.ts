@@ -8,6 +8,8 @@ import { doctorCommand } from './commands/doctor.js';
 import { initCommand } from './commands/init.js';
 import { loginCommand } from './commands/login.js';
 import { logoutCommand } from './commands/logout.js';
+import { signCommand } from './commands/sign.js';
+import { verifyCommand } from './commands/verify.js';
 import { whoamiCommand } from './commands/whoami.js';
 import { setNonInteractive } from './lib/prompts.js';
 import { CliError, ExitCode, fail } from './lib/ui.js';
@@ -92,6 +94,17 @@ program
   .description('Affiche le software/module et l\'environnement lies a la config locale.')
   .option(...NON_INTERACTIVE_OPTION)
   .action(withErrorHandling(whoamiCommand));
+
+program
+  .command('sign')
+  .description('Signe un manifest (HMAC-SHA256) prouvant la liaison repo local <-> software/module AppStation <-> Registra.')
+  .option('--output <file>', 'Chemin du manifest signe', 'appstation.manifest.signed.json')
+  .action(withErrorHandling(signCommand));
+
+program
+  .command('verify <file>')
+  .description('Verifie un manifest signe (schema, signature HMAC-SHA256, fraicheur).')
+  .action(withErrorHandling((file: string) => verifyCommand({ file })));
 
 function withErrorHandling<Args extends unknown[]>(
   handler: (...args: Args) => Promise<void>,

@@ -7,7 +7,9 @@ pour verifier des licences depuis votre code.
 
 En resume : `aps login` vous authentifie, `aps init` lie le depot courant a
 un logiciel/module App Station et ecrit la configuration, `aps doctor`
-verifie que tout fonctionne.
+verifie que tout fonctionne, et `aps sign`/`aps verify` produisent et
+verifient une preuve cryptographique (HMAC-SHA256) que le depot est bien lie
+au logiciel/module declare.
 
 ## Installation
 
@@ -130,13 +132,40 @@ courant.
 aps whoami
 ```
 
+### `aps sign`
+
+Genere un manifest signe (HMAC-SHA256) prouvant la liaison entre ce depot
+local, le logiciel/module App Station et l'environnement Registra. Le
+manifest ne contient jamais la cle API en clair, uniquement son empreinte
+SHA-256.
+
+```bash
+aps sign [--output <file>]   # par defaut : appstation.manifest.signed.json
+```
+
+Soumettez le fichier genere a App Station (dashboard editeur ou review).
+
+### `aps verify <file>`
+
+Verifie un manifest signe : schema, signature HMAC-SHA256, fraicheur de
+generation (30 jours par defaut). Code de sortie `0` si valide, `1` sinon.
+
+```bash
+aps verify appstation.manifest.signed.json
+```
+
+Necessite le meme `signingSecret` que celui utilise pour signer :
+`appstation.conf.local.json` du depot concerne, ou la variable
+`APS_SIGNING_SECRET` (utile en CI ou pour une verification hors du depot
+d'origine, par ex. cote App Station).
+
 ## Ou sont stockees les donnees
 
 | Donnee | Emplacement | Versionne ? |
 | --- | --- | --- |
 | Session (token App Station) | `~/.config/app-station/credentials.json` (Linux/macOS) ou `%APPDATA%\app-station\credentials.json` (Windows), permissions `0600` | Non — local a la machine |
 | Config du projet | `appstation.conf.json` a la racine du depot | Oui |
-| Cle API Registra | `appstation.conf.local.json` a la racine du depot | Non — ajoute au `.gitignore` par `aps init` |
+| Cle API Registra + signingSecret | `appstation.conf.local.json` a la racine du depot | Non — ajoute au `.gitignore` par `aps init` |
 
 ## Contribuer
 

@@ -24,7 +24,10 @@ const sampleConfig: SoftwareProjectConfig = {
   appstation: { baseUrl: 'https://appstation.test', softwareId: 1, projectFingerprint: 'a'.repeat(64) },
 };
 
-const sampleLocalConfig: LocalProjectConfig = { auth: { apiKey: 'plain-key-123' } };
+const sampleLocalConfig: LocalProjectConfig = {
+  auth: { apiKey: 'plain-key-123' },
+  signingSecret: 'signing-secret-abc',
+};
 
 let dir: string;
 
