@@ -116,6 +116,27 @@ export class AppStationClient {
     });
   }
 
+  /**
+   * `/api/v1/publisher/...` : metadonnees (nom, tagline, prix, essai...),
+   * distinct de `/api/v1/developer/...` utilise par `aps init`/`rotate-key`/
+   * `promote`. Meme middleware d'auth (`auth:sanctum` + `publisher`).
+   */
+  async updateSoftware(id: number, changes: Record<string, unknown>): Promise<AppStationSoftware> {
+    const result = await this.request<{ data: AppStationSoftware }>(`/api/v1/publisher/softwares/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(changes),
+    });
+    return result.data;
+  }
+
+  async updatePackage(id: number, changes: Record<string, unknown>): Promise<AppStationPackage> {
+    const result = await this.request<{ data: AppStationPackage }>(`/api/v1/publisher/packages/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(changes),
+    });
+    return result.data;
+  }
+
   async registraInit(input: {
     type: ProjectType;
     id: number;

@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { configCommand } from './commands/config.js';
 import { doctorCommand } from './commands/doctor.js';
 import { initCommand } from './commands/init.js';
 import { loginCommand } from './commands/login.js';
@@ -11,6 +12,7 @@ import { logoutCommand } from './commands/logout.js';
 import { promoteCommand } from './commands/promote.js';
 import { rotateKeyCommand } from './commands/rotate-key.js';
 import { signCommand } from './commands/sign.js';
+import { updateCommand } from './commands/update.js';
 import { verifyCommand } from './commands/verify.js';
 import { whoamiCommand } from './commands/whoami.js';
 import { setNonInteractive } from './lib/prompts.js';
@@ -96,6 +98,25 @@ program
   .description('Affiche le software/module et l\'environnement lies a la config locale.')
   .option(...NON_INTERACTIVE_OPTION)
   .action(withErrorHandling(whoamiCommand));
+
+program
+  .command('config')
+  .description('Dump la config resolue : session, appstation.conf.json, source des secrets (jamais les valeurs).')
+  .option(...NON_INTERACTIVE_OPTION)
+  .action(withErrorHandling(configCommand));
+
+program
+  .command('update')
+  .description('Met a jour les metadonnees du software/module lie (nom, tagline, prix, essai...).')
+  .option('--name <name>', 'Nom')
+  .option('--tagline <tagline>', 'Tagline (software uniquement)')
+  .option('--description <text>', 'Description')
+  .option('--price-per-day <xof>', 'Prix par jour en XOF (software uniquement)')
+  .option('--lifetime-price <xof>', 'Prix a vie en XOF (software uniquement)')
+  .option('--trial-period-days <n>', 'Active l\'essai avec cette duree en jours (software uniquement)')
+  .option('--disable-trial', 'Desactive l\'essai (software uniquement)')
+  .option(...NON_INTERACTIVE_OPTION)
+  .action(withErrorHandling(updateCommand));
 
 program
   .command('sign')
