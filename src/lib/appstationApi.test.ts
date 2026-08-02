@@ -34,7 +34,7 @@ describe('AppStationClient requests', () => {
     await client.listSoftwares();
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('https://appstation.test/api/v1/developer/softwares');
+    expect(url).toBe('https://appstation.test/api/v1/developer/softwares?page=1');
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer my-token');
     expect((init.headers as Record<string, string>).Accept).toBe('application/json');
   });
@@ -46,7 +46,7 @@ describe('AppStationClient requests', () => {
     await client.listSoftwares();
 
     const [url] = fetchMock.mock.calls[0] as [string];
-    expect(url).toBe('https://appstation.test/api/v1/developer/softwares');
+    expect(url).toBe('https://appstation.test/api/v1/developer/softwares?page=1');
   });
 
   it('listSoftwares unwraps the paginated data array', async () => {
@@ -56,6 +56,46 @@ describe('AppStationClient requests', () => {
     const softwares = await client.listSoftwares();
 
     expect(softwares).toEqual([{ id: 1, name: 'A', slug: 'a', status: 'draft' }]);
+  });
+
+  it('listSoftwares walks every page and concatenates the results', async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse(200, {
+          data: [{ id: 1, name: 'A', slug: 'a', status: 'draft' }],
+          meta: { current_page: 1, last_page: 3 },
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(200, {
+          data: [{ id: 2, name: 'B', slug: 'b', status: 'draft' }],
+          meta: { current_page: 2, last_page: 3 },
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(200, {
+          data: [{ id: 3, name: 'C', slug: 'c', status: 'draft' }],
+          meta: { current_page: 3, last_page: 3 },
+        }),
+      );
+
+    const client = new AppStationClient('https://appstation.test', 'token');
+    const softwares = await client.listSoftwares();
+
+    expect(softwares.map((s) => s.id)).toEqual([1, 2, 3]);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect((fetchMock.mock.calls[0] as [string])[0]).toBe('https://appstation.test/api/v1/developer/softwares?page=1');
+    expect((fetchMock.mock.calls[1] as [string])[0]).toBe('https://appstation.test/api/v1/developer/softwares?page=2');
+    expect((fetchMock.mock.calls[2] as [string])[0]).toBe('https://appstation.test/api/v1/developer/softwares?page=3');
+  });
+
+  it('listSoftwares stops after a single page when meta is absent', async () => {
+    fetchMock.mockResolvedValue(jsonResponse(200, { data: [{ id: 1, name: 'A', slug: 'a', status: 'draft' }] }));
+
+    const client = new AppStationClient('https://appstation.test', 'token');
+    await client.listSoftwares();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('createSoftware POSTs the payload and unwraps the resource', async () => {

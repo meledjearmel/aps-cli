@@ -20,7 +20,11 @@ export class ApiError extends Error {
 
 interface Paginated<T> {
   data: T[];
+  meta?: { current_page: number; last_page: number };
 }
+
+/** Garde-fou : evite une boucle infinie si un serveur renvoie des `meta` incoherents. */
+const MAX_PAGES = 50;
 
 export class AppStationClient {
   constructor(
@@ -72,9 +76,37 @@ export class AppStationClient {
     return body as T;
   }
 
+  /**
+   * `GET /api/v1/developer/{softwares|packages}` pagine (`paginate(20)`
+   * cote AppStation) — sans ceci, un compte editeur avec plus de 20
+   * entrees en perdait silencieusement au-dela de la premiere page (le
+   * picker `aps init --link` et `aps promote` pouvaient rater un
+   * software/module pourtant existant).
+   */
+  private async fetchAllPages<T>(pathname: string): Promise<T[]> {
+    const items: T[] = [];
+    let page = 1;
+
+    while (page <= MAX_PAGES) {
+      const separator = pathname.includes('?') ? '&' : '?';
+      const result = await this.request<Paginated<T>>(`${pathname}${separator}page=${page}`);
+      items.push(...result.data);
+
+      const currentPage = result.meta?.current_page ?? page;
+      const lastPage = result.meta?.last_page ?? currentPage;
+
+      if (currentPage >= lastPage) {
+        break;
+      }
+
+      page += 1;
+    }
+
+    return items;
+  }
+
   async listSoftwares(): Promise<AppStationSoftware[]> {
-    const result = await this.request<Paginated<AppStationSoftware>>('/api/v1/developer/softwares');
-    return result.data;
+    return this.fetchAllPages<AppStationSoftware>('/api/v1/developer/softwares');
   }
 
   async createSoftware(input: { name: string; tagline?: string; license_type?: string }): Promise<AppStationSoftware> {
@@ -97,8 +129,7 @@ export class AppStationClient {
   }
 
   async listPackages(): Promise<AppStationPackage[]> {
-    const result = await this.request<Paginated<AppStationPackage>>('/api/v1/developer/packages');
-    return result.data;
+    return this.fetchAllPages<AppStationPackage>('/api/v1/developer/packages');
   }
 
   async createPackage(input: { software_id: number; name: string }): Promise<AppStationPackage> {
