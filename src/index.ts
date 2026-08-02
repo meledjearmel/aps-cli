@@ -147,7 +147,7 @@ program
 program
   .command('release <file>')
   .description('Publie une release (upload de fichier) pour le software/module lie.')
-  .requiredOption('--version <version>', 'Version (max 20 caracteres)')
+  .option('--release-version <version>', 'Version (max 20 caracteres), requis — pas --version, reserve au numero de version de la CLI')
   .option('--channel <channel>', 'stable|beta|rc|nightly', 'stable')
   .option('--platform <platform>', 'windows|macos|linux|android|ios|universal — omis = archive generique')
   .option('--notes <text>', 'Notes de version (markdown, max 10000 caracteres)')

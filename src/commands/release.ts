@@ -9,7 +9,7 @@ import type { Platform, ReleaseChannel } from '../types.js';
 import { CliError, ExitCode, nextSteps, ok, warn } from '../lib/ui.js';
 
 export interface ReleaseOptions {
-  version?: string;
+  releaseVersion?: string;
   channel?: ReleaseChannel;
   platform?: Platform;
   notes?: string;
@@ -30,11 +30,11 @@ export async function releaseCommand(file: string, options: ReleaseOptions): Pro
   assertOneOf(options.channel, CHANNELS, '--channel');
   assertOneOf(options.platform, PLATFORMS, '--platform');
 
-  if (!options.version) {
-    throw new CliError('--version est requis.', ExitCode.Usage);
+  if (!options.releaseVersion) {
+    throw new CliError('--release-version est requis.', ExitCode.Usage);
   }
 
-  assertMaxLength(options.version, 20, '--version');
+  assertMaxLength(options.releaseVersion, 20, '--release-version');
   if (options.notes !== undefined) assertMaxLength(options.notes, 10000, '--notes');
 
   const config = await readProjectConfig();
@@ -68,7 +68,7 @@ export async function releaseCommand(file: string, options: ReleaseOptions): Pro
   const client = new AppStationClient(session.appstation.baseUrl, session.appstation.accessToken);
 
   const form = new FormData();
-  form.append('version', options.version);
+  form.append('version', options.releaseVersion);
   form.append('channel', options.channel ?? 'stable');
   if (options.platform) form.append('platform', options.platform);
   if (options.notes !== undefined) form.append('release_notes', options.notes);
@@ -78,7 +78,7 @@ export async function releaseCommand(file: string, options: ReleaseOptions): Pro
   const buffer = await readFile(file);
   form.append('release_file', new Blob([buffer]), path.basename(file));
 
-  const release = await withSpinner(`Publication de la release ${options.version}...`, () =>
+  const release = await withSpinner(`Publication de la release ${options.releaseVersion}...`, () =>
     config.type === 'module'
       ? client.createPackageRelease(config.appstation.packageId, form)
       : client.createSoftwareRelease(config.appstation.softwareId, form),

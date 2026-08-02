@@ -78,6 +78,7 @@ aps promote
 - **[`aps sign`](#aps-sign) / [`aps verify`](#aps-verify-file)** — signer (HMAC-SHA256) et verifier un manifest prouvant la liaison depot ↔ App Station ↔ Registra, pour la soumission ou la CI.
 - **[`aps rotate-key`](#aps-rotate-key)** — rafraichir la cle locale apres une rotation faite cote Registra.
 - **[`aps promote`](#aps-promote)** — basculer la config locale de `development` vers `production` une fois le logiciel publie.
+- **[`aps release <file>`](#aps-release-file)** — publier une release (upload de fichier) pour le logiciel/module lie.
 
 ## Politique de version
 
@@ -284,6 +285,29 @@ aps promote [-y|--yes] [--non-interactive]
 
 En CI/CD, remplacez `REGISTRA_DEV_API_KEY` par `REGISTRA_API_KEY` apres la
 promotion.
+
+### `aps release <file>`
+
+Publie une release (upload du fichier `<file>`) pour le logiciel/module lie —
+memes regles de validation que le formulaire App Station officiel.
+
+```bash
+aps release ./dist/mon-logiciel-1.4.0.exe --release-version 1.4.0 \
+  [--channel stable|beta|rc|nightly] [--platform windows|macos|linux|android|ios|universal] \
+  [--notes <text>] [--min-software-version <version>] [--max-software-version <version>]
+```
+
+| Flag | Description |
+| --- | --- |
+| `--release-version <version>` | **Requis.** 20 caracteres max. Pas `--version` (reserve au numero de version de la CLI elle-meme, collision avec `-V`/`--version` de Commander). |
+| `--channel <channel>` | `stable` (defaut), `beta`, `rc` ou `nightly`. |
+| `--platform <platform>` | `windows`, `macos`, `linux`, `android`, `ios` ou `universal`. Omis = archive generique. |
+| `--notes <text>` | Notes de version (markdown), 10 000 caracteres max. |
+| `--min-software-version` / `--max-software-version` | Compatibilite avec le logiciel hote (**module uniquement**). |
+
+Si aucun `signingSecret` n'existe encore pour ce logiciel, la release est
+publiee sans signature (`signature: null`) — elle est calculee
+retroactivement des que possible, pas une erreur a corriger.
 
 ## Ou sont stockees les donnees
 
