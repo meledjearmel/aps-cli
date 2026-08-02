@@ -81,9 +81,23 @@ export async function doctorCommand(options: DoctorOptions): Promise<void> {
     throw new CliError(`Registra GET /software/me -> HTTP ${meResponse.status}.`, ExitCode.Generic);
   }
 
-  const me = (await meResponse.json()) as { data?: { name?: string }; name?: string };
+  const me = (await meResponse.json()) as {
+    data?: {
+      name?: string;
+      has_previous_api_key_grace_period?: boolean;
+      api_key_previous_expires_at?: string | null;
+    };
+    name?: string;
+  };
   const name = me.data?.name ?? me.name;
   ok(`Registra GET /software/me -> ${name ?? 'OK'} (${environment}).`);
+
+  if (me.data?.has_previous_api_key_grace_period) {
+    const expiresAt = me.data.api_key_previous_expires_at;
+    warn(
+      `Ancienne cle encore acceptee (periode de grace apres rotation)${expiresAt ? `, jusqu'au ${expiresAt}` : ''} — migrez vers la nouvelle cle avant expiration.`,
+    );
+  }
 
   let verifyResponse: Response;
 

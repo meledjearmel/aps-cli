@@ -177,6 +177,11 @@ aps doctor [--env development|production] [--non-interactive]
 dans `appstation.conf.json` (utile pour verifier une cle de production tout
 en developpant en local).
 
+Si l'ancienne cle (avant une rotation faite cote Registra) est encore dans
+sa periode de grace, `aps doctor` l'indique avec sa date d'expiration —
+pensez alors a `aps rotate-key` pour passer a la nouvelle cle avant qu'elle
+n'expire.
+
 ### `aps whoami`
 
 Affiche l'instance App Station connectee et le logiciel/module lie au depot
