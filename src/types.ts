@@ -1,5 +1,7 @@
 export type ProjectType = 'software' | 'module';
 export type Environment = 'development' | 'production';
+export type Platform = 'windows' | 'macos' | 'linux' | 'android' | 'ios' | 'universal';
+export type ReleaseChannel = 'stable' | 'beta' | 'rc' | 'nightly';
 
 export interface Credentials {
   appstation: {
@@ -96,4 +98,25 @@ export type ProjectConfig = SoftwareProjectConfig | ModuleProjectConfig;
 export interface LocalProjectConfig {
   auth: { apiKey: string };
   signingSecret: string;
+}
+
+/**
+ * Reponse de `POST /api/v1/publisher/{softwares|packages}/{id}/releases`
+ * (voir app-station/docs/api-publisher-releases.md). `signature` peut etre
+ * `null` tant qu'aucun signingSecret n'existe encore pour ce software —
+ * pas une erreur, un etat transitoire normal en debut de vie.
+ */
+export interface ReleaseResource {
+  id: number;
+  version: string;
+  platform: Platform | null;
+  channel: ReleaseChannel;
+  release_notes: string | null;
+  checksum: string;
+  signature: string | null;
+  file_size: number;
+  is_yanked: boolean;
+  published_at: string | null;
+  min_software_version?: string | null;
+  max_software_version?: string | null;
 }

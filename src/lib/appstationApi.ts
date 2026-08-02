@@ -5,6 +5,7 @@ import type {
   Environment,
   ProjectType,
   RegistraInitResponse,
+  ReleaseResource,
 } from '../types.js';
 
 export class ApiError extends Error {
@@ -29,6 +30,9 @@ export class AppStationClient {
 
   private async request<T>(pathname: string, init: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl.replace(/\/+$/, '')}${pathname}`;
+    // FormData (upload multipart) : ne jamais fixer Content-Type nous-memes,
+    // fetch/undici doit generer le boundary lui-meme a partir du corps.
+    const isFormData = init.body instanceof FormData;
     let response: Response;
 
     try {
@@ -37,7 +41,7 @@ export class AppStationClient {
         headers: {
           Authorization: `Bearer ${this.accessToken}`,
           Accept: 'application/json',
-          'Content-Type': 'application/json',
+          ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
           ...init.headers,
         },
       });
@@ -147,6 +151,27 @@ export class AppStationClient {
       method: 'POST',
       body: JSON.stringify(input),
     });
+  }
+
+  /**
+   * `/api/v1/publisher/{softwares|packages}/{id}/releases` — voir
+   * app-station/docs/api-publisher-releases.md. Meme middleware/policy que
+   * `updateSoftware`/`updatePackage`.
+   */
+  async createSoftwareRelease(id: number, form: FormData): Promise<ReleaseResource> {
+    const result = await this.request<{ data: ReleaseResource }>(`/api/v1/publisher/softwares/${id}/releases`, {
+      method: 'POST',
+      body: form,
+    });
+    return result.data;
+  }
+
+  async createPackageRelease(id: number, form: FormData): Promise<ReleaseResource> {
+    const result = await this.request<{ data: ReleaseResource }>(`/api/v1/publisher/packages/${id}/releases`, {
+      method: 'POST',
+      body: form,
+    });
+    return result.data;
   }
 }
 

@@ -24,11 +24,6 @@ jobs:
       - run: npm test
       - run: npm run build
 
-      - name: Debug NPM_TOKEN presence
-        run: echo "NPM_TOKEN length is ${#NODE_AUTH_TOKEN}"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - run: npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

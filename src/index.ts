@@ -10,6 +10,7 @@ import { initCommand } from './commands/init.js';
 import { loginCommand } from './commands/login.js';
 import { logoutCommand } from './commands/logout.js';
 import { promoteCommand } from './commands/promote.js';
+import { releaseCommand } from './commands/release.js';
 import { rotateKeyCommand } from './commands/rotate-key.js';
 import { signCommand } from './commands/sign.js';
 import { updateCommand } from './commands/update.js';
@@ -142,6 +143,17 @@ program
   .option('-y, --yes', 'Ne pas demander de confirmation')
   .option(...NON_INTERACTIVE_OPTION)
   .action(withErrorHandling(promoteCommand));
+
+program
+  .command('release <file>')
+  .description('Publie une release (upload de fichier) pour le software/module lie.')
+  .requiredOption('--version <version>', 'Version (max 20 caracteres)')
+  .option('--channel <channel>', 'stable|beta|rc|nightly', 'stable')
+  .option('--platform <platform>', 'windows|macos|linux|android|ios|universal — omis = archive generique')
+  .option('--notes <text>', 'Notes de version (markdown, max 10000 caracteres)')
+  .option('--min-software-version <version>', 'Version software hote minimale (module uniquement)')
+  .option('--max-software-version <version>', 'Version software hote maximale (module uniquement)')
+  .action(withErrorHandling((file: string, options: Parameters<typeof releaseCommand>[1]) => releaseCommand(file, options)));
 
 function withErrorHandling<Args extends unknown[]>(
   handler: (...args: Args) => Promise<void>,
